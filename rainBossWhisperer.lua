@@ -136,7 +136,7 @@ function frame:PLAYER_REGEN_ENABLED()
 end
 
 function frame:CHAT_MSG_WHISPER(msg, sender, _, _, _, flag)
-	if flag == "GM" or #bosses == 0 then return end -- TODO #bosses == 0 but InEncounterInProgress()
+	if flag == "GM" or #bosses == 0 then return end -- TODO #bosses == 0 but IsEncounterInProgress()
 
 	local reply = GetReply(sender, msg)
 	if reply then
@@ -145,7 +145,7 @@ function frame:CHAT_MSG_WHISPER(msg, sender, _, _, _, flag)
 end
 
 function frame:CHAT_MSG_BN_WHISPER(msg, sender, _, _, _, _, _, _, _, _, _, _, presenceID)
-	if #bosses == 0 then return end -- TODO #bosses == 0 but InEncounterInProgress()
+	if #bosses == 0 then return end -- TODO #bosses == 0 but IsEncounterInProgress()
 
 	local _, _, _, _, toonName, _, client = BNGetFriendInfoByID(presenceID) -- client: WoW, D3
 	local reply = GetReply(toonName, msg, presenceID, client)
