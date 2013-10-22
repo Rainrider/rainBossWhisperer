@@ -86,8 +86,10 @@ function frame:ZONE_CHANGED_NEW_AREA()
 		_, _, encounterID, _, encounterLink = EJ_GetEncounterInfoByIndex(encounterIndex, instanceID)
 	end
 
-	if (debug and not IsAddOnLoaded("Blizzard_DebugTools")) then
-		LoadAddOn("Blizzard_DebugTools")
+	if debug then
+		if not IsAddOnLoaded("Blizzard_DebugTools") then
+			LoadAddOn("Blizzard_DebugTools")
+		end
 		DevTools_Dump(encounters)
 	end
 
