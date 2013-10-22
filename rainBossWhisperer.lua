@@ -100,7 +100,7 @@ function frame:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 		local unit = "boss" .. i
 		-- Shado-Pan Garrison daily quests display your companion as a boss
 		-- UnitClassification returns "normal" and UnitName returns nil for non-present units
-		if Unitclassification(unit) ~= "normal" then
+		if UnitClassification(unit) ~= "normal" then
 			bosses[#bosses + 1] = UnitName(unit)
 		end
 	end
