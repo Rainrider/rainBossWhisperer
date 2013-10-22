@@ -25,6 +25,7 @@ local frame = CreateFrame("Frame")
 frame:SetScript("OnEvent", function(self, event, msg, ...) self[event](self, msg, ...) end)
 frame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("CHAT_MSG_WHISPER")
 frame:RegisterEvent("CHAT_MSG_BN_WHISPER")
 frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
@@ -53,6 +54,11 @@ local function GetReply(sender, msg, presenceID, client)
 		--		 use strlenutf8()
 		return string.format(dndMsg, currentEncounterLink, str)
 	end
+end
+
+function frame:PLAYER_ENTERING_WORLD()
+	self:ZONE_CHANGED_NEW_AREA()
+	self:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 end
 
 -- XXX: does not fire after reloadui
