@@ -69,7 +69,7 @@ function frame:ZONE_CHANGED_NEW_AREA()
 
 	local instanceID = EJ_GetCurrentInstance()
 	
-	if not instanceID or instanceID == 0 then
+	if not instanceID or instanceID == 0 or instanceID == 322 then
 		Debug("Not in an instance", instanceID)
 		return
 	end
