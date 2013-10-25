@@ -74,6 +74,8 @@ function frame:ZONE_CHANGED_NEW_AREA()
 		return
 	end
 
+	EJ_SelectInstance(instanceID) -- load instance data
+
 	local encounterIndex = 1
 	local _, _, encounterID, _, encounterLink = EJ_GetEncounterInfoByIndex(encounterIndex, instanceID)
 	while encounterID do
