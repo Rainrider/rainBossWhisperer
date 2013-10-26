@@ -105,6 +105,8 @@ end
 
 -- XXX: does not fire after reloadui
 function frame:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+	if currentEncounterLink ~= "" then return end -- so we don't set this multiple times per encounter
+
 	wipe(bosses)
 	for i = 1, MAX_BOSS_FRAMES do
 		local unit = "boss" .. i
@@ -116,8 +118,6 @@ function frame:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 	end
 
 	Debug("Bosses:", #bosses, "CurrentEncounter:", currentEncounterLink)
-
-	if currentEncounterLink ~= "" then return end -- so we don't set this multiple times per encounter
 
 	for i = 1, #bosses do
 		for j = 1, #encounters do
