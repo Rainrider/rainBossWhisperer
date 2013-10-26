@@ -2,7 +2,7 @@ local addon = ...
 local prefix = "<RBW>: "
 local dndMsg = prefix .. "Encounter in progress %s: %s"
 local combatEndedMsg = prefix .. "Combat ended."
-local bossFormat = "%s (%d%%)" -- name (health%)
+local bossFormat = " %s (%d%%)" -- name (health%)
 
 local playerName = UnitName("player")
 local disableChatFilter = true
