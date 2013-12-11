@@ -12,6 +12,7 @@ local whisperers = {}
 
 local encounterLinkFormat = "|cff66bbff|Hjournal:1:%d:%d|h[%s]|h|r" -- encounterID, difficultyID, name
 local encounterLink
+local encounterName
 
 local debug = false
 
@@ -33,7 +34,7 @@ local function GetReply(sender, msg, presenceID, client)
 	if (not client or client == "WoW") and (type(sender) ~= "string" or playerName == sender or UnitInRaid(sender) or UnitInParty(sender)) then return end
 
 	if not whisperers[presenceID or sender] or msg == "status" then
-		whisperers[presenceID or sender] = true
+		whisperers[presenceID or sender] = client and client or "WoW"
 		local str = ""
 		for i = 1, MAX_BOSS_FRAMES do
 			local unit = "boss" .. i
@@ -43,10 +44,10 @@ local function GetReply(sender, msg, presenceID, client)
 		end
 		-- message length should not be > 255 characters (utf8 aware)
 		-- SendChatMessage truncates to 255 chars, BNSendWhisper fails silently
-		local reply = string.format(dndMsg, encounterLink, str)
+		local reply = string.format(dndMsg, client and client ~= "WoW" and encounterName or encounterLink, str)
 
 		if strlenutf8(reply) > 255 then
-			reply = string.format(dndMsg, encounterLink, "")
+			reply = string.format(dndMsg, client and client ~= "WoW" and encounterName or encounterLink, "")
 		end
 
 		return reply
@@ -55,12 +56,13 @@ end
 
 function frame:ENCOUNTER_START(encounterID, name, difficultyID, size)
 	encounterLink = string.format(encounterLinkFormat, encounterID, difficultyID, name)
+	encounterName = name
 end
 
 function frame:ENCOUNTER_END(_, _, _, _, success)
-	local reply = string.format(success == 1 and combatEndedWin or combatEndedWipe, encounterLink)
-	for player in pairs(whisperers) do
+	for player, client in pairs(whisperers) do
 		local presenceID = tonumber(player)
+		local reply = string.format(success == 1 and combatEndedWin or combatEndedWipe, client == "WoW" and encounterLink or encounterName)
 		if presenceID then
 			BNSendWhisper(presenceID, reply)
 		else
@@ -68,6 +70,7 @@ function frame:ENCOUNTER_END(_, _, _, _, success)
 		end
 	end
 	encounterLink = nil
+	encounterName = nil
 	wipe(whisperers)
 end
 
