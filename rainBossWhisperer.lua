@@ -17,6 +17,8 @@ local options = {
 
 local debug = false
 
+local BNET_CLIENT_WOW = BNET_CLIENT_WOW
+
 local frame = CreateFrame("Frame")
 frame:SetScript("OnEvent", function(self, event, ...) self[event](self, ...) end)
 frame:RegisterEvent("ENCOUNTER_START")
@@ -33,7 +35,7 @@ local function Debug(...)
 end
 
 local function GetReply(sender, msg, accountName, client)
-	if (not client or client == "WoW") and (type(sender) ~= "string" or playerName == sender or UnitInRaid(sender) or UnitInParty(sender)) then return end
+	if (not client or client == BNET_CLIENT_WOW) and (type(sender) ~= "string" or playerName == sender or UnitInRaid(sender) or UnitInParty(sender)) then return end
 
 	if not db.whisperers[accountName or sender] or msg == "status" then
 		db.whisperers[accountName or sender] = true
@@ -46,10 +48,10 @@ local function GetReply(sender, msg, accountName, client)
 		end
 		-- message length should not be > 255 characters (utf8 aware)
 		-- SendChatMessage truncates to 255 chars, BNSendWhisper fails silently
-		local reply = string.format(dndMsg, client and client ~= "WoW" and db.encounterName or db.encounterLink, str)
+		local reply = string.format(dndMsg, client and client ~= BNET_CLIENT_WOW and db.encounterName or db.encounterLink, str)
 
 		if strlenutf8(reply) > 255 then
-			reply = string.format(dndMsg, client and client ~= "WoW" and db.encounterName or db.encounterLink, "")
+			reply = string.format(dndMsg, client and client ~= BNET_CLIENT_WOW and db.encounterName or db.encounterLink, "")
 		end
 
 		return reply
@@ -67,7 +69,7 @@ function frame:ENCOUNTER_END(_, _, _, _, success)
 		if presenceID then
 			local _, _, _, _, _, _, client, isOnline = BNGetFriendInfoByID(presenceID)
 			if isOnline then
-				local reply = string.format(success == 1 and combatEndedWin or combatEndedWipe, client == "WoW" and db.encounterLink or db.encounterName)
+				local reply = string.format(success == 1 and combatEndedWin or combatEndedWipe, client == BNET_CLIENT_WOW and db.encounterLink or db.encounterName)
 				BNSendWhisper(presenceID, reply)
 			end
 		else
