@@ -3,6 +3,7 @@
 ## Notes: Sends an automated reply to whispers when you are fighting a boss
 ## Author: Rainrider
 ## Version: 0.1
+## SavedVariables: rainBossWhispererDB
 
 ## X-Credids: Rabbit
 ## X-Website: https://github.com/Rainrider/rainBossWhisperer

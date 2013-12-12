@@ -6,13 +6,14 @@ local combatEndedWipe = prefix .. "Combar ended. Wipe against %s."
 local bossFormat = " %s (%d%%)" -- name (health%)
 
 local playerName = UnitName("player")
-local disableChatFilter = true
-
-local whisperers = {}
 
 local encounterLinkFormat = "|cff66bbff|Hjournal:1:%d:%d|h[%s]|h|r" -- encounterID, difficultyID, name
-local encounterLink
-local encounterName
+
+local db
+local options = {
+	disableChatFilter = false,
+	whisperers = {},
+}
 
 local debug = false
 
@@ -22,6 +23,7 @@ frame:RegisterEvent("ENCOUNTER_START")
 frame:RegisterEvent("ENCOUNTER_END")
 frame:RegisterEvent("CHAT_MSG_WHISPER")
 frame:RegisterEvent("CHAT_MSG_BN_WHISPER")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("ADDON_LOADED")
 
 local function Debug(...)
@@ -30,11 +32,11 @@ local function Debug(...)
 	print(prefix, ...)
 end
 
-local function GetReply(sender, msg, presenceID, client)
+local function GetReply(sender, msg, accountName, client)
 	if (not client or client == "WoW") and (type(sender) ~= "string" or playerName == sender or UnitInRaid(sender) or UnitInParty(sender)) then return end
 
-	if not whisperers[presenceID or sender] or msg == "status" then
-		whisperers[presenceID or sender] = client and client or "WoW"
+	if not db.whisperers[accountName or sender] or msg == "status" then
+		db.whisperers[accountName or sender] = true
 		local str = ""
 		for i = 1, MAX_BOSS_FRAMES do
 			local unit = "boss" .. i
@@ -44,10 +46,10 @@ local function GetReply(sender, msg, presenceID, client)
 		end
 		-- message length should not be > 255 characters (utf8 aware)
 		-- SendChatMessage truncates to 255 chars, BNSendWhisper fails silently
-		local reply = string.format(dndMsg, client and client ~= "WoW" and encounterName or encounterLink, str)
+		local reply = string.format(dndMsg, client and client ~= "WoW" and db.encounterName or db.encounterLink, str)
 
 		if strlenutf8(reply) > 255 then
-			reply = string.format(dndMsg, client and client ~= "WoW" and encounterName or encounterLink, "")
+			reply = string.format(dndMsg, client and client ~= "WoW" and db.encounterName or db.encounterLink, "")
 		end
 
 		return reply
@@ -55,27 +57,32 @@ local function GetReply(sender, msg, presenceID, client)
 end
 
 function frame:ENCOUNTER_START(encounterID, name, difficultyID, size)
-	encounterLink = string.format(encounterLinkFormat, encounterID, difficultyID, name)
-	encounterName = name
+	db.encounterLink = string.format(encounterLinkFormat, encounterID, difficultyID, name)
+	db.encounterName = name
 end
 
 function frame:ENCOUNTER_END(_, _, _, _, success)
-	for player, client in pairs(whisperers) do
-		local presenceID = tonumber(player)
-		local reply = string.format(success == 1 and combatEndedWin or combatEndedWipe, client == "WoW" and encounterLink or encounterName)
+	for player in pairs(db.whisperers) do
+		local presenceID = BNet_GetPresenceID(player)
 		if presenceID then
-			BNSendWhisper(presenceID, reply)
+			local _, _, _, _, _, _, client, isOnline = BNGetFriendInfoByID(presenceID)
+			if isOnline then
+				local reply = string.format(success == 1 and combatEndedWin or combatEndedWipe, client == "WoW" and db.encounterLink or db.encounterName)
+				BNSendWhisper(presenceID, reply)
+			end
 		else
+			-- TODO: check online status before sending messages
+			local reply = string.format(success == 1 and combatEndedWin or combatEndedWipe, db.encounterLink)
 			SendChatMessage(reply, "WHISPER", nil, player)
 		end
 	end
-	encounterLink = nil
-	encounterName = nil
-	wipe(whisperers)
+	db.encounterLink = nil
+	db.encounterName = nil
+	wipe(db.whisperers)
 end
 
 function frame:CHAT_MSG_WHISPER(msg, sender, _, _, _, flag)
-	if flag == "GM" or not encounterLink then return end
+	if flag == "GM" or not db.encounterLink then return end
 
 	local reply = GetReply(sender, msg)
 	if reply then
@@ -83,13 +90,20 @@ function frame:CHAT_MSG_WHISPER(msg, sender, _, _, _, flag)
 	end
 end
 
-function frame:CHAT_MSG_BN_WHISPER(msg, _, _, _, _, _, _, _, _, _, _, _, presenceID)
-	if not encounterLink then return end
+function frame:CHAT_MSG_BN_WHISPER(msg, sender, _, _, _, _, _, _, _, _, _, _, presenceID)
+	if not db.encounterLink then return end
 
-	local _, _, _, _, toonName, _, client = BNGetFriendInfoByID(presenceID) -- client: WoW, D3, ...
-	local reply = GetReply(toonName, msg, presenceID, client)
+	local _, accountName, _, _, toonName, _, client = BNGetFriendInfoByID(presenceID) -- client: WoW, D3, ...
+	local reply = GetReply(toonName, msg, accountName, client)
 	if reply then
 		BNSendWhisper(presenceID, reply)
+	end
+end
+
+function frame:PLAYER_ENTERING_WORLD()
+	if db.encounterLink and not IsEncounterInProgress() then
+		db.encounterLink = nil
+		db.encounterName = nil
 	end
 end
 
@@ -98,7 +112,10 @@ function frame:ADDON_LOADED(name)
 
 	self:UnregisterEvent("ADDON_LOADED")
 
-	if not disableChatFilter then
+	rainBossWhispererDB = rainBossWhispererDB or options
+	db = rainBossWhispererDB
+
+	if not debug and not db.disableChatFilter then
 		ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", function(self, event, msg)
 			if string.find(msg, "^" .. prefix) then return true end
 		end)
