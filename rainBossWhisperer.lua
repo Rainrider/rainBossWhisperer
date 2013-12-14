@@ -95,8 +95,8 @@ end
 function frame:CHAT_MSG_BN_WHISPER(msg, sender, _, _, _, _, _, _, _, _, _, _, presenceID)
 	if not db.encounterLink then return end
 
-	local _, accountName, _, _, toonName, _, client = BNGetFriendInfoByID(presenceID) -- client: WoW, D3, ...
-	local reply = GetReply(toonName, msg, accountName, client)
+	local _, _, _, _, toonName, _, client = BNGetFriendInfoByID(presenceID)
+	local reply = GetReply(toonName, msg, sender, client)
 	if reply then
 		BNSendWhisper(presenceID, reply)
 	end
