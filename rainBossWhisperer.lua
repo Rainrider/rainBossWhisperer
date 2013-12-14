@@ -15,6 +15,16 @@ local options = {
 	whisperers = {},
 }
 
+local meta = {
+	__index = function(tbl, key)
+		if tbl == options then
+			return nil -- TODO: I probably have to raise an error here or warn that I'm trying to access an undefined key
+		end
+		tbl[key] = options[key]
+		return options[key]
+	end
+}
+
 local debug = false
 
 local BNET_CLIENT_WOW = BNET_CLIENT_WOW
@@ -115,7 +125,7 @@ function frame:ADDON_LOADED(name)
 	self:UnregisterEvent("ADDON_LOADED")
 
 	rainBossWhispererDB = rainBossWhispererDB or options
-	db = rainBossWhispererDB
+	db = setmetatable(rainBossWhispererDB, meta)
 
 	if not debug and not db.disableChatFilter then
 		ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", function(self, event, msg)
