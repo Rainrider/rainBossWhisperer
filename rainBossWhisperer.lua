@@ -1,8 +1,8 @@
 local addon = ...
-local prefix = "<RBW>: "
-local dndMsg = prefix .. "Encounter in progress %s: %s"
-local combatEndedWin = prefix .. "Combat ended. Win against %s."
-local combatEndedWipe = prefix .. "Combar ended. Wipe against %s."
+local prefix = "<RBW>:"
+local dndMsg = prefix .. " Encounter in progress %s: %s"
+local combatEndedWin = prefix .. " Combat ended. Win against %s."
+local combatEndedWipe = prefix .. " Combar ended. Wipe against %s."
 local bossFormat = " %s (%d%%)" -- name (health%)
 
 local playerName = UnitName("player")
@@ -119,6 +119,33 @@ function frame:PLAYER_ENTERING_WORLD()
 	end
 end
 
+local FilterWhisper = function(chatframe, event, msg)
+	if string.find(msg, "^" .. prefix) then
+		return true
+	end
+end
+
+local ToggleChatFilter = function(enable)
+	if enable then
+		ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", FilterWhisper)
+		ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", FilterWhisper)
+	else
+		ChatFrame_RemoveMessageEventFilter("CHAT_MSG_WHISPER_INFORM", FilterWhisper)
+		ChatFrame_RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", FilterWhisper)
+	end
+end
+
+local Command = function(msg, editbox)
+	msg = string.lower(msg)
+	if msg == "chatfilter" then
+		db.disableChatFilter = not db.disableChatFilter
+		ToggleChatFilter(db.disableChatFilter)
+		print(prefix, "chat filter is", db.disableChatFilter and "OFF" or "ON")
+	else
+		print(prefix, "Unknown command.")
+	end
+end
+
 function frame:ADDON_LOADED(name)
 	if name ~= addon then return end
 
@@ -128,11 +155,10 @@ function frame:ADDON_LOADED(name)
 	db = setmetatable(rainBossWhispererDB, meta)
 
 	if not debug and not db.disableChatFilter then
-		ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", function(self, event, msg)
-			if string.find(msg, "^" .. prefix) then return true end
-		end)
-		ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER_INFORM", function(self, event, msg)
-			if string.find(msg, "^" .. prefix) then return true end
-		end)
+		ToggleChatFilter(true)
 	end
+
+	SLASH_rainBossWhisperer1 = "/rbw"
+	SLASH_rainBossWhisperer2 = "/rainBW"
+	SlashCmdList[addon] = Command
 end
