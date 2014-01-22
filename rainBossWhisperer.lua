@@ -7,8 +7,6 @@ local bossFormat = " %s (%d%%)" -- name (health%)
 
 local playerName = UnitName("player")
 
-local encounterLinkFormat = "|cff66bbff|Hjournal:1:%d:%d|h[%s]|h|r" -- encounterID, difficultyID, name
-
 local db
 local options = {
 	disableChatFilter = false,
@@ -68,9 +66,20 @@ local function GetReply(sender, msg, accountName, client)
 	end
 end
 
-function frame:ENCOUNTER_START(encounterID, name, difficultyID, size)
-	db.encounterLink = string.format(encounterLinkFormat, encounterID, difficultyID, name)
-	db.encounterName = name
+function frame:ENCOUNTER_START(encounterID, encounterName, difficultyID, size)
+	db.encounterName = encounterName
+	local i = 1
+	while true do
+		local _, _, _, name, _, _, _, link = EJ_GetMapEncounter(i)
+		if not name then
+			db.encounterLink = encounterName -- fall-back
+			break
+		elseif name == encounterName then
+			db.encounterLink = link
+			break
+		end
+		i = i + 1
+	end
 end
 
 function frame:ENCOUNTER_END(_, _, _, _, success)
