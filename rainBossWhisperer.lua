@@ -24,6 +24,8 @@ local meta = {
 
 local BNET_CLIENT_WOW = BNET_CLIENT_WOW
 
+local Debug
+
 local frame = CreateFrame("Frame")
 frame:SetScript("OnEvent", function(self, event, ...) self[event](self, ...) end)
 frame:RegisterEvent("ENCOUNTER_START")
@@ -34,6 +36,10 @@ frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("ADDON_LOADED")
 
 local function GetReply(sender, msg, accountName, client)
+	Debug("|cff00ff00GetReply:|r", "Sender:", sender, "Account:", accountName, "Client:", client)
+	local serverlessSender, server = strsplit("-", sender)
+	Debug("|cff00ff00GetReply:|r", "Server", server, UnitInRaid(sender), UnitInRaid(serverlessSender))
+
 	if (not client or client == BNET_CLIENT_WOW) and (type(sender) ~= "string" or playerName == sender or UnitInRaid(sender) or UnitInParty(sender)) then return end
 
 	if not db.whisperers[accountName or sender] or msg == "status" then
@@ -140,7 +146,11 @@ function frame:ADDON_LOADED(name)
 	rainBossWhispererDB = rainBossWhispererDB or options
 	db = setmetatable(rainBossWhispererDB, meta)
 
-	if not db.disableChatFilter then
+	if AdiDebug then
+		Debug = AdiDebug:Embed(self, name)
+	end
+
+	if not Debug and not db.disableChatFilter then
 		ToggleChatFilter(true)
 	end
 
