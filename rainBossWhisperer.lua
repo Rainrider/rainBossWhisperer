@@ -137,7 +137,7 @@ local Command = function(msg, editbox)
 		ToggleChatFilter(db.disableChatFilter)
 		print(prefix, "chat filter is", db.disableChatFilter and "OFF" or "ON")
 	else
-		print(prefix, "Unknown command.")
+		print(prefix, "Unknown command:", msg)
 	end
 end
 
