@@ -47,22 +47,8 @@ local function GetReply(sender, msg, accountName, client)
 
 	if not db.whisperers[accountName or sender] or msg == "status" then
 		db.whisperers[accountName or sender] = true
-		local str = ""
-		for i = 1, MAX_BOSS_FRAMES do
-			local unit = "boss" .. i
-			if UnitExists(unit) then
-				str = str .. string.format(bossFormat, UnitName(unit), math.floor(UnitHealth(unit) / UnitHealthMax(unit) * 100 + 0.5))
-			end
-		end
-		-- message length should not be > 255 characters (utf8 aware)
-		-- SendChatMessage truncates to 255 chars, BNSendWhisper fails silently
-		local reply = string.format(dndMsg, client and client ~= BNET_CLIENT_WOW and db.encounterName or db.encounterLink, str)
 
-		if strlenutf8(reply) > 255 then
-			reply = string.format(dndMsg, client and client ~= BNET_CLIENT_WOW and db.encounterName or db.encounterLink, "")
-		end
-
-		return reply
+		return string.format(dndMsg, client and client ~= BNET_CLIENT_WOW and db.encounterName or db.encounterLink)
 	end
 end
 
