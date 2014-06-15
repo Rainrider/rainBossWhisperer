@@ -1,9 +1,8 @@
 local addon = ...
 local prefix = "<RBW>:"
-local dndMsg = prefix .. " Encounter in progress %s: %s"
+local dndMsg = prefix .. " Encounter in progress: %s"
 local combatEndedWin = prefix .. " Combat ended. Win against %s."
 local combatEndedWipe = prefix .. " Combar ended. Wipe against %s."
-local bossFormat = " %s (%d%%)" -- name (health%)
 
 local playerName = UnitName("player")
 
